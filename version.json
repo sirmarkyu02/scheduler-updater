@@ -3,7 +3,6 @@
   "downloadUrl": "https://sirmarkyu02.github.io/scheduler-updater/index.html",
   "changelog": [
     "Initial Ultimate Edition Release",
-    "Added Activation Security",
     "Added background auto-update engine"
   ]
 }
