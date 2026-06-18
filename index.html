@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Automated School Scheduler Pro v6.0 - Ultimate Edition</title>
+    
+    <meta name="author" content="John Marq E. Ramos">
+    <meta name="description" content="Automated School Scheduler Pro engineered by John Marq E. Ramos.">
+    <meta name="copyright" content="Copyright © 2026 John Marq E. Ramos. All Rights Reserved.">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Automated School Scheduler Pro",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web Browser",
+      "author": {
+        "@type": "Person",
+        "name": "John Marq E. Ramos"
+      },
+      "copyrightHolder": {
+        "@type": "Person",
+        "name": "John Marq E. Ramos"
+      },
+      "copyrightYear": "2026"
+    }
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --success: #10b981;
+            --success-hover: #059669;
+            --secondary: #64748b;
+            --secondary-hover: #475569;
+            --outline: #e0e7ff;
+            --outline-hover: #c7d2fe;
+            --bg-body: #f8fafc;
+            --bg-panel: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --focus-ring: rgba(79, 70, 229, 0.15);
+        }
+
+        * { box-sizing: border-box; }
+        
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; display: flex; background: var(--bg-body); color: var(--text-main); height: 100vh; overflow: hidden; }
+        body.resizing-active { cursor: col-resize !important; user-select: none; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .sidebar { width: 350px; background: var(--bg-panel); border-right: 1px solid var(--border); box-shadow: 2px 0 10px rgba(0,0,0,0.02); padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; height: 100%; z-index: 50; flex-shrink: 0; transition: margin-left 0.3s ease; }
+        .sidebar.hidden { margin-left: -350px; }
+        
+        .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        
+        .topbar { background: var(--bg-panel); padding: 8px 20px; border-bottom: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 8px; z-index: 40; }
+        .topbar-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        
+        .filter-group { display: flex; gap: 10px; align-items: center; background: #f1f5f9; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); }
+        .save-badge { background: #dcfce7; color: #166534; font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px; transition: opacity 0.5s; }
+        
+        .toggle-bar { display: inline-flex; background-color: #f1f5f9; border-radius: 8px; padding: 4px; border: 1px solid var(--border); }
+        .toggle-btn { background: transparent; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--text-main); transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; font-family: inherit; }
+        .toggle-btn:hover { background-color: #e2e8f0; color: var(--primary); }
+
+        .analytics-container { display: flex; gap: 8px; align-items: center; display: none; }
+        .hours-badge { font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 8px; border: 1px solid; display: flex; align-items: center; gap: 4px; }
+        .badge-teach { background: #e0e7ff; color: #3730a3; border-color: #c7d2fe; }
+        .badge-admin { background: #fef08a; color: #854d0e; border-color: #fde047; }
+        .badge-consult { background: #e9d5ff; color: #6b21a8; border-color: #d8b4fe; }
+        .badge-total { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
+        
+        .timetable-container { flex: 1; overflow: auto; padding: 25px; }
+        .timetable-container:fullscreen { background-color: var(--bg-body); padding: 25px; }
+        .timetable-container:-webkit-full-screen { background-color: var(--bg-body); padding: 25px; }
+        
+        h2 { margin: 0; color: var(--text-main); font-size: 1.4rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        h3 { margin: 0; color: var(--text-main); font-size: 1.05rem; font-weight: 600; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        
+        input[type="text"], input[type="number"], input[type="range"], select { padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; font-family: inherit; width: 100%; background: #f8fafc; color: var(--text-main); transition: all 0.2s ease; }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus { background: #ffffff; border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px var(--focus-ring); }
+        input:disabled, select:disabled { background-color: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+        
+        .checkbox-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; }
+        .checkbox-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+        
+        button { padding: 10px 16px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; font-family: inherit; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn-primary { background: var(--primary); color: white; padding: 12px; font-size: 0.95rem; }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: var(--danger-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: var(--success-hover); }
+        .btn-secondary { background: var(--bg-body); color: var(--secondary); border: 1px solid var(--border); box-shadow: none; }
+        .btn-secondary:hover { background: var(--border); color: var(--text-main); }
+        .btn-outline { background: white; color: var(--primary); border: 1px solid var(--outline-hover); box-shadow: none; }
+        .btn-outline:hover { background: var(--outline); }
+        .btn-small { padding: 6px 12px; font-size: 0.75rem; border-radius: 6px; }
+        
+        .error-banner { background: #fee2e2; color: #dc2626; padding: 12px; border-radius: 8px; font-size: 0.85rem; display: none; font-weight: 500; border: 1px solid #fca5a5; margin-bottom: 10px; }
+        .section-divider { border: 0; border-top: 1px solid var(--border); margin: 5px 0; }
+        
+        .advanced-toggle-btn { background: #f1f5f9; color: var(--text-main); border: 1px dashed #cbd5e1; padding: 10px; width: 100%; border-radius: 8px; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: background 0.2s; }
+        .advanced-toggle-btn:hover { background: #e2e8f0; border-color: #94a3b8; }
+
+        .panel-box { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; margin: -5px; padding: 5px; border-radius: 6px; transition: background 0.2s; }
+        .panel-header:hover { background: #f8fafc; }
+        .panel-header h3 { color: var(--text-main); pointer-events: none; }
+        .toggle-icon { font-size: 0.75rem; color: #94a3b8; transition: transform 0.3s ease; pointer-events: none; }
+        .panel-content { display: none; flex-direction: column; gap: 12px; margin-top: 5px; border-top: 1px dashed #e2e8f0; padding-top: 12px; }
+        .panel-content.active { display: flex; }
+
+        .list-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; gap: 8px; transition: border-color 0.2s; }
+        .list-item:hover { border-color: #cbd5e1; }
+        .list-item span { font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; color: var(--text-main); }
+        .list-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+        .calendar-wrapper { display: flex; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border); min-width: 100%; width: max-content; overflow: hidden; }
+        .time-labels { width: 85px; flex-shrink: 0; background: #f8fafc; border-right: 1px solid var(--border); }
+        .time-label-header { height: 45px; border-bottom: 1px solid var(--border); }
+        .time-slot-label { height: 40px; text-align: center; font-size: 0.75rem; color: #64748b; font-weight: 600; padding-top: 8px; border-bottom: 1px solid #f1f5f9; }
+        
+        .day-column { flex: 1; border-right: 1px solid var(--border); display: flex; flex-direction: column; position: relative; min-width: 120px; }
+        .day-column:last-child { border-right: none; }
+        .day-header { height: 45px; background: #f8fafc; font-weight: 700; color: var(--text-main); text-align: center; line-height: 45px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        
+        .column-resizer { position: absolute; top: 0; right: 0px; width: 6px; height: 100%; cursor: col-resize; background-color: transparent; z-index: 150; transition: background-color 0.2s; }
+        .column-resizer:hover, .column-resizer.resizing { background-color: var(--primary); opacity: 0.6; }
+
+        .day-events-area { position: relative; height: 840px; background-image: linear-gradient(#f1f5f9 1px, transparent 1px); background-size: 100% 40px; }
+        
+        .class-card { position: absolute; border-radius: 6px; padding: 8px; border-left: 5px solid rgba(0,0,0,0.25); box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; overflow: hidden; line-height: 1.35; }
+        .class-card:hover { transform: scale(1.02); z-index: 100 !important; box-shadow: 0 6px 15px rgba(0,0,0,0.1); border-left-width: 7px; filter: brightness(0.98); }
+        .class-card.dragging { opacity: 0.7; transform: scale(0.95); cursor: grabbing; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 999 !important; }
+        
+        .card-subject { font-size: 1.05em; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; letter-spacing: -0.3px; }
+        .card-detail { font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; opacity: 0.9; }
+        .lunch-card { background: repeating-linear-gradient(45deg, #f8fafc, #f8fafc 10px, #f1f5f9 10px, #f1f5f9 20px) !important; border-left: 5px solid #94a3b8 !important; color: #475569; }
+
+        .workload-table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; font-size: 0.85rem; }
+        .workload-table th { border-bottom: 2px solid #cbd5e1; padding: 10px 8px; background: #f8fafc; font-weight: 600; color: #334155; white-space: nowrap; }
+        .workload-table td { border-bottom: 1px solid #e2e8f0; padding: 10px 8px; color: #1e293b; transition: background-color 0.3s ease; }
+        .load-alert { color: #dc2626; font-weight: bold; background: #fee2e2; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; white-space: nowrap; display: inline-block; animation: pulse 2s infinite; }
+        .load-alert-under { color: #b45309; font-weight: bold; background: #fef3c7; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; white-space: nowrap; display: inline-block; }
+        .load-ok { color: #166534; font-weight: bold; background: #dcfce7; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; white-space: nowrap; display: inline-block; }
+        .row-overload { background-color: #fef2f2 !important; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
+        .modal-content { background: white; padding: 30px; border-radius: 16px; width: 420px; max-width: 95%; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid var(--border); }
+        .modal-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 15px; }
+
+        @keyframes zoomPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+        .modal-zoom { animation: zoomPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        .print-only { display: none; }
+        @media print {
+            .sidebar, .topbar, button, .modal-overlay, .advanced-toggle-btn, .column-resizer { display: none !important; }
+            body { background: white; overflow: visible; height: auto; }
+            .timetable-container { overflow: visible; padding: 0; }
+            .calendar-wrapper { box-shadow: none; border: 1px solid #ccc; min-width: 100%; width: 100%; }
+            .class-card { box-shadow: none; border: 1px solid #000; border-left: 5px solid #000; }
+            .day-column { width: auto !important; flex: 1 !important; }
+            .print-only { display: block; width: 100%; text-align: center; }
+            #printHeader { font-size: 24px; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+            #printFooter { font-size: 14px; color: #555; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 10px; text-align: center; }
+            #workloadContainer { display: block; page-break-before: always; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="activationOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9999999; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; font-family:'Inter', sans-serif;">
+        <div style="background:#1e293b; padding:40px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.5); text-align:center; max-width:400px; border: 1px solid #334155;">
+            <h2 style="margin-top:0; color:#e2e8f0; font-size:1.5rem;">Activate Scheduler Pro</h2>
+            <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:20px;">Please enter your product key to unlock the Ultimate Edition.</p>
+            <input type="text" id="activationKeyInput" placeholder="Enter Activation Code" style="width:100%; padding:12px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:white; margin-bottom:15px; font-size:1rem; text-align:center; outline:none;">
+            <button onclick="verifyActivation()" style="background:#4f46e5; color:white; border:none; padding:12px 20px; border-radius:8px; width:100%; font-size:1rem; cursor:pointer; font-weight:600; transition: background 0.2s;">Activate Software</button>
+            <div id="activationError" style="color:#ef4444; margin-top:12px; display:none; font-size:0.85rem; font-weight:500;">Invalid activation code. Access Denied.</div>
+        </div>
+    </div>
+
+    <div id="updateModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); z-index:999999; display:none; justify-content:center; align-items:center; font-family:'Inter', sans-serif;">
+        <div style="background:#1e293b; padding:30px; border-radius:12px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.5); text-align:left; max-width:450px; width:90%; border: 1px solid #334155; color: white;">
+            <div style="display:flex; align-items:center; margin-bottom:15px;">
+                <div style="background:#4f46e5; width:42px; height:42px; border-radius:50%; display:flex; justify-content:center; align-items:center; margin-right:15px; box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:white;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                </div>
+                <div>
+                    <h3 style="margin:0; font-size:1.25rem; font-weight:600; color:#f8fafc;">New Update Available!</h3>
+                    <p style="margin:0; font-size:0.875rem; color:#94a3b8;">A newer version of Scheduler Pro is ready.</p>
+                </div>
+            </div>
+            
+            <div style="background:#0f172a; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #334155;">
+                <div style="font-weight:600; font-size:0.95rem; color:#818cf8; margin-bottom:8px;">Version <span id="newVersionNumber">0.0</span> Enhancements:</div>
+                <ul id="changelogContent" style="font-size:0.85rem; color:#cbd5e1; margin:0; padding-left:20px; line-height:1.5;">
+                    </ul>
+            </div>
+            
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button onclick="document.getElementById('updateModal').style.display='none'" style="background:transparent; border:1px solid #475569; color:#94a3b8; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:0.9rem; font-weight:500; transition:0.2s;">Skip For Now</button>
+                <button id="downloadUpdateBtn" style="background:#4f46e5; border:none; color:white; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:0.9rem; font-weight:600; transition:0.2s;">Update Now</button>
+            </div>
+        </div>
+    </div>
+
+    <div style="position: fixed; bottom: 8px; right: 15px; font-size: 11px; color: #94a3b8; font-family: sans-serif; z-index: 99999; pointer-events: none; letter-spacing: 0.5px;">
+        Intellectual Property of <strong>John Marq E. Ramos</strong> © 2026
+    </div>
+
+    <div class="sidebar">
+        <h2>
+            Scheduler Pro
+            <span id="autoSaveIndicator" class="save-badge">✔️ Auto-Saved</span>
+        </h2>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: -8px; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 5px;">
+            Developed by <strong>John Marq E. Ramos</strong> | v6.0 Ultimate
+        </div>
+        
+        <div id="sidebarErrorBanner" class="error-banner"></div>
+        
+        <div class="form-group">
+            <label>Teacher Name</label>
+            <select id="teacher"></select>
+        </div>
+
+        <div class="form-group">
+            <label>Schedule Type</label>
+            <select id="taskType" onchange="handleTaskTypeChange()">
+                <option value="class">Regular Class</option>
+                <option value="admin">Administrative Task</option>
+                <option value="consult">Consultation Time</option>
+                <option value="homeroom">Homeroom Duty</option>
+                <option value="studentOrg">Student Org in Club</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Subject</label>
+            <input type="text" id="subject" list="subjectDatalist" placeholder="e.g., Algebra (Type or Select)">
+            <datalist id="subjectDatalist"></datalist>
+        </div>
+        <div class="form-group">
+            <label>Section / Class</label>
+            <select id="section"></select>
+        </div>
+        <div class="form-group">
+            <label>Description / Comment (Optional)</label>
+            <input type="text" id="description" placeholder="e.g., Special Needs, Lab day...">
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+                <label>Weekly Hours</label>
+                <select id="totalHours">
+                    <option value="1">1 Hour</option>
+                    <option value="1.5">1.5 Hours</option>
+                    <option value="2">2 Hours</option>
+                    <option value="3" selected>3 Hours</option>
+                    <option value="4">4 Hours</option>
+                    <option value="5">5 Hours</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Session Block</label>
+                <select id="duration">
+                    <option value="1">1.0 Hour</option>
+                    <option value="1.5" selected>1.5 Hours</option>
+                    <option value="2">2.0 Hours</option>
+                    <option value="3">3.0 Hours</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Allowed Weekdays</label>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="day-Monday" checked><label>Mon</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="day-Tuesday" checked><label>Tue</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="day-Wednesday" checked><label>Wed</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="day-Thursday" checked><label>Thu</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="day-Friday" checked><label>Fri</label></div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Preferred Room</label>
+            <select id="preferredRoom" onchange="toggleExcludeRooms()"></select>
+        </div>
+        <div class="form-group" id="excludeRoomContainer" style="display: none; background: #fef2f2; padding: 8px; border-radius: 8px; border: 1px solid #fecaca;">
+            <label style="color: #dc2626; font-size: 0.75rem;">Exclude Auto-Assign Rooms</label>
+            <div class="checkbox-group" id="excludeRoomList"></div>
+        </div>
+        
+        <button class="btn-primary" style="margin-top: 5px;" onclick="handleAddSchedule()">Schedule Task</button>
+        
+        <hr class="section-divider">
+
+        <div class="panel-box">
+            <div class="panel-header" onclick="togglePanel('panelBreaks', this)">
+                <h3>☕ Fixed Break / Lunch</h3>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div id="panelBreaks" class="panel-content">
+                <div class="form-group">
+                    <label>Apply To</label>
+                    <select id="breakTargetType" onchange="handleBreakTargetChange()">
+                        <option value="section">Specific Section</option>
+                        <option value="teacher">Specific Teacher</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Target Name</label>
+                    <select id="breakTargetName"></select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group"><label>Start Time</label><select id="breakStart"></select></div>
+                    <div class="form-group">
+                        <label>Duration</label>
+                        <select id="breakDuration">
+                            <option value="30">30 Mins</option>
+                            <option value="60" selected>1 Hour</option>
+                            <option value="90">1.5 Hours</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Days</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item"><input type="checkbox" id="b-day-Monday" checked><label>M</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="b-day-Tuesday" checked><label>T</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="b-day-Wednesday" checked><label>W</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="b-day-Thursday" checked><label>Th</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="b-day-Friday" checked><label>F</label></div>
+                    </div>
+                </div>
+                <button class="btn-outline" onclick="handleAddBreak()">➕ Schedule Break</button>
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <button class="advanced-toggle-btn" onclick="toggleAdvancedMenus()">⚙️ Toggle Advanced Setup</button>
+        
+        <div id="advancedMenusWrapper" style="display: none; flex-direction: column; gap: 15px; margin-top: 5px;">
+            
+            <div class="panel-box">
+                <div class="panel-header" onclick="togglePanel('panelTeachers', this)">
+                    <h3>Manage Teachers</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div id="panelTeachers" class="panel-content">
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="newTeacherInput" placeholder="e.g., Prof. Davis" onkeydown="if(event.key === 'Enter') addTeacherFromUI()">
+                        <button class="btn-success" onclick="addTeacherFromUI()" style="padding: 0 16px;">Add</button>
+                    </div>
+                    <div id="teachersUiList" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;"></div>
+                </div>
+            </div>
+
+            <div class="panel-box">
+                <div class="panel-header" onclick="togglePanel('panelSections', this)">
+                    <h3>Manage Sections</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div id="panelSections" class="panel-content">
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="newSectionInput" placeholder="e.g., Grade 10-A" onkeydown="if(event.key === 'Enter') addSectionFromUI()">
+                        <button class="btn-success" onclick="addSectionFromUI()" style="padding: 0 16px;">Add</button>
+                    </div>
+                    <div id="sectionsUiList" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;"></div>
+                </div>
+            </div>
+
+            <div class="panel-box">
+                <div class="panel-header" onclick="togglePanel('panelSubjects', this)">
+                    <h3>Manage Subjects</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div id="panelSubjects" class="panel-content">
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="newSubjectInput" placeholder="e.g., Algebra" onkeydown="if(event.key === 'Enter') addSubjectFromUI()">
+                        <button class="btn-success" onclick="addSubjectFromUI()" style="padding: 0 16px;">Add</button>
+                    </div>
+                    <div id="subjectsUiList" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;"></div>
+                </div>
+            </div>
+
+            <div class="panel-box">
+                <div class="panel-header" onclick="togglePanel('panelRooms', this)">
+                    <h3>Manage Rooms Pool</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div id="panelRooms" class="panel-content">
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="newRoomInput" placeholder="e.g., Room 204" onkeydown="if(event.key === 'Enter') addRoomFromUI()">
+                        <button class="btn-success" onclick="addRoomFromUI()" style="padding: 0 16px;">Add</button>
+                    </div>
+                    <div id="roomsUiList" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;"></div>
+                </div>
+            </div>
+
+            <div class="panel-box">
+                <div class="panel-header" onclick="togglePanel('panelAppearance', this)">
+                    <h3>🎨 Visual Appearance</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div id="panelAppearance" class="panel-content">
+                    <div class="form-group">
+                        <label>Font Style</label>
+                        <select id="prefFont" onchange="triggerUpdate()">
+                            <option value="'Inter', 'Segoe UI', Tahoma, Geneva, sans-serif">Modern Sans (Inter)</option>
+                            <option value="Arial, Helvetica, sans-serif">Arial / Helvetica</option>
+                            <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                            <option value="'Trebuchet MS', 'Lucida Sans Unicode', sans-serif">Trebuchet MS</option>
+                            <option value="'Times New Roman', Times, serif">Classic Serif (Times)</option>
+                            <option value="'Courier New', Courier, monospace">Monospace (Courier)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject / Title Format</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item"><input type="checkbox" id="prefTitleBold" checked onchange="triggerUpdate()"><label>Bold</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="prefTitleItalic" onchange="triggerUpdate()"><label>Italic</label></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Lines / Details Format</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item"><input type="checkbox" id="prefDetailsBold" onchange="triggerUpdate()"><label>Bold</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="prefDetailsItalic" onchange="triggerUpdate()"><label>Italic</label></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Text Alignment</label>
+                        <select id="prefAlign" onchange="triggerUpdate()">
+                            <option value="left">Left Aligned</option>
+                            <option value="center">Center Aligned</option>
+                            <option value="right">Right Aligned</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Card Font Size: <span id="fontSizeLabel">12px</span></label>
+                        <input type="range" id="prefSize" min="9" max="18" value="12" oninput="document.getElementById('fontSizeLabel').innerText = this.value + 'px'; triggerUpdate();">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-secondary" style="margin-top: auto; border: 1px solid #fca5a5; color: #dc2626;" onclick="clearTimetable()">🗑️ Clear Timetable (Reset)</button>
+    </div>
+
+    <div class="main-content">
+        <div class="topbar">
+            <div id="topbarErrorBanner" class="error-banner" style="margin: 0;"></div>
+            
+            <div class="topbar-row">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button class="btn-secondary" onclick="toggleSidebarMenu()" style="padding: 6px 12px; gap: 4px;">☰ Toggle Menu</button>
+                    <div id="currentBackupBadge" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);">
+                        📂 Active Data: <span id="backupNameText" style="color: var(--primary);">Current Session</span>
+                    </div>
+                </div>
+                
+                <div class="toggle-bar">
+                    <button class="toggle-btn" onclick="startNewSession()">✨ New</button>
+                    <button class="toggle-btn" onclick="triggerImport()">📂 Open</button>
+                    <button class="toggle-btn" onclick="exportBackup()">💾 Save Backup</button>
+                    <input type="file" id="importBackupFile" accept=".json" style="display:none;" onchange="importBackup(event)">
+                </div>
+            </div>
+            
+            <div class="topbar-row">
+                <div class="filter-group">
+                    <label><strong>Viewing Filter:</strong></label>
+                    <select id="viewMode" onchange="updateFilterOptions(null, true)" style="min-width: 180px; padding: 6px 12px;">
+                        <option value="all">Show All Timetables</option>
+                        <option value="teacher">By Specific Teacher</option>
+                        <option value="room">By Specific Room</option>
+                        <option value="section">By Specific Section</option>
+                    </select>
+                    <select id="filterValue" onchange="handleFilterValueChange()" style="display: none; width: 200px; padding: 6px 12px;"></select>
+                    
+                    <div id="analyticsPanel" class="analytics-container">
+                        <div id="teachHoursBadge" class="hours-badge badge-teach">📖 0h Teaching</div>
+                        <div id="adminHoursBadge" class="hours-badge badge-admin">📁 0h Admin</div>
+                        <div id="consultHoursBadge" class="hours-badge badge-consult">🗣️ 0h Consult</div>
+                        <div id="totalHoursBadge" class="hours-badge badge-total">⏱️ 0h Total</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-outline" style="padding: 8px 14px;" onclick="toggleFullscreenMode()">⛶ Fullscreen</button>
+                    <button class="btn-secondary" style="padding: 8px 14px;" onclick="resetColumnWidths()">📏 Reset Columns</button>
+                    <button class="btn-secondary" style="padding: 8px 14px;" onclick="window.print()">🖨️ Print</button>
+                    <button class="btn-success" style="padding: 8px 14px;" onclick="exportToCSV()">📄 Export Raw CSV</button>
+                    <button class="btn-primary" style="padding: 8px 14px;" onclick="exportStyledExcel()">📊 Export Styled Excel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="timetable-container" id="timetableContainer">
+            <div id="printHeader" class="print-only"></div>
+            <div class="calendar-wrapper" id="calendarWrapper"></div>
+            
+            <div id="workloadContainer" style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:20px; margin-top:25px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+                <h3 style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                    <span>📊 Teacher Deployment Workload Optimization Matrix</span>
+                    <div style="font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);">
+                        <label for="targetTeachHours">Max Regular Class Hours:</label>
+                        <input type="number" id="targetTeachHours" value="27" min="1" max="168" style="width: 65px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold; text-align: center; color: var(--primary);" oninput="updateMaxHours()">
+                    </div>
+                </h3>
+                <div id="workloadAnalyticsContainer" style="overflow-x:auto; margin-top:10px;"></div>
+            </div>
+            
+            <div id="printFooter" class="print-only"></div>
+        </div>
+    </div>
+
+    <div id="viewModalOverlay" class="modal-overlay" onclick="if(event.target===this) closeViewModal()">
+        <div class="modal-content modal-zoom" style="width: 350px; align-items: center; text-align: center;">
+            <div id="viewIcon" style="font-size: 3rem; margin-bottom: -10px;">📚</div>
+            <h2 id="viewTitle" style="justify-content: center; width: 100%;">Subject</h2>
+            <div id="viewSubtitle" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 10px; font-weight: 500;"></div>
+            <div id="viewBody" style="background: #f8fafc; padding: 20px; border-radius: 12px; width: 100%; text-align: left; font-size: 0.95rem; line-height: 1.6; border: 1px solid var(--border);"></div>
+            <div class="modal-actions" style="justify-content: center; width: 100%; margin-top: 15px; gap: 15px;">
+                <button class="btn-secondary" onclick="closeViewModal()">Close</button>
+                <button class="btn-primary" onclick="proceedToEdit()">✏️ Edit Details</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModalOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="margin: 0; color: var(--text-main);" id="modalTitle">Modify Details</h2>
+            <div id="modalErrorBanner" class="error-banner"></div>
+            
+            <div class="form-group" id="editLunchGroup" style="display:none;">
+                <label id="editLunchLabel">Target Name</label>
+                <select id="editLunchTarget"></select>
+            </div>
+
+            <div id="regularClassFields">
+                <div class="form-group">
+                    <label>Schedule Type</label>
+                    <select id="editTaskType" onchange="handleEditTaskTypeChange()">
+                        <option value="class">Regular Class</option>
+                        <option value="admin">Administrative Task</option>
+                        <option value="consult">Consultation Time</option>
+                        <option value="homeroom">Homeroom Duty</option>
+                        <option value="studentOrg">Student Org in Club</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Teacher Name</label><select id="editTeacher"></select></div>
+                <div class="form-group"><label>Subject</label><input type="text" id="editSubject" list="editSubjectDatalist"><datalist id="editSubjectDatalist"></datalist></div>
+                <div class="form-group"><label>Section / Class</label><select id="editSection"></select></div>
+                <div class="form-group"><label>Description / Comment</label><input type="text" id="editDescription"></div>
+                <div class="form-group"><label>Room Allocation</label><select id="editRoom"></select></div>
+            </div>
+            
+            <div class="form-group">
+                <label>Day</label>
+                <select id="editDay" onchange="filterAvailableRoomsInEdit()">
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                </select>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group"><label>Start Time</label><select id="editStart" onchange="filterAvailableRoomsInEdit()"></select></div>
+                <div class="form-group">
+                    <label>Duration</label>
+                    <select id="editDuration" onchange="filterAvailableRoomsInEdit()">
+                        <option value="30">30 Mins</option>
+                        <option value="60">1.0 Hour</option>
+                        <option value="90">1.5 Hours</option>
+                        <option value="120">2.0 Hours</option>
+                        <option value="180">3.0 Hours</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-secondary" style="color: var(--danger); border-color: #fca5a5;" onclick="deleteClassFromModal()">Delete Record</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-outline" onclick="closeEditModal()">Cancel</button>
+                    <button class="btn-success" onclick="saveEditClass()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const APP_VERSION = "v6.0 Ultimate";
+
+        // --- Activation Security Routine ---
+        const VALID_PRODUCT_KEY = "SIRMARKYU2026"; // <-- Change your activation code here
+        
+        function checkActivation() {
+            if (localStorage.getItem("schedulerProUltimateActivated") !== "true") {
+                document.getElementById("activationOverlay").style.display = "flex";
+            } else {
+                document.getElementById("activationOverlay").style.display = "none";
+            }
+        }
+        
+        window.verifyActivation = function() {
+            const input = document.getElementById("activationKeyInput").value.trim();
+            if (input === VALID_PRODUCT_KEY) {
+                localStorage.setItem("schedulerProUltimateActivated", "true");
+                document.getElementById("activationOverlay").style.display = "none";
+                alert("Activation Successful! Welcome to Scheduler Pro v6.0 Ultimate.");
+            } else {
+                document.getElementById("activationError").style.display = "block";
+            }
+        };
+        
+        checkActivation();
+
+        // --- Update System Routine Configuration ---
+        const APP_CURRENT_VERSION = "6.0"; 
+        // Replace the URL below with the actual link where your version.json is hosted online
+        const REMOTE_VERSION_URL = "sirmarkyu02.github.io/scheduler-updater/version.json"; 
+        
+        async function checkForUpdates() {
+            try {
+                const response = await fetch(REMOTE_VERSION_URL, { cache: "no-store" });
+                if (!response.ok) return; // Exit silently if server is down or file isn't found
+                
+                const data = await response.json();
+                
+                // Parse strings to numbers to compare safely (e.g., 6.1 > 6.0)
+                if (parseFloat(data.latestVersion) > parseFloat(APP_CURRENT_VERSION)) {
+                    document.getElementById("newVersionNumber").innerText = data.latestVersion;
+                    const changelogList = document.getElementById("changelogContent");
+                    changelogList.innerHTML = "";
+                    
+                    data.changelog.forEach(item => {
+                        const li = document.createElement("li");
+                        li.innerText = item;
+                        changelogList.appendChild(li);
+                    });
+                    
+                    document.getElementById("downloadUpdateBtn").onclick = function() {
+                        openUpdateLink(data.downloadUrl);
+                    };
+                    
+                    document.getElementById("updateModal").style.display = "flex";
+                }
+            } catch (error) {
+                console.error("System update check failed: ", error);
+            }
+        }
+        
+        function openUpdateLink(url) {
+            const isElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1 || (window.process && window.process.type);
+            if (isElectron) {
+                try {
+                    const { shell } = require('electron');
+                    shell.openExternal(url);
+                } catch(e) {
+                    window.open(url, '_blank');
+                }
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+
+        // V6.0 Anti-Tamper Security Routine protecting Creator Identity
+        (function verifyIntellectualPropertyIntegrity() {
+            const absoluteCreator = "John Marq E. Ramos";
+            const currentMetadataSignature = document.querySelector('meta[name="author"]')?.getAttribute('content');
+            if (currentMetadataSignature !== absoluteCreator) {
+                alert("Critical Error: Unauthorized modification of engineering source detected.");
+                document.body.innerHTML = "<h2 style='text-align:center; margin-top:20%; font-family:sans-serif;'>System execution disabled. Please restore attribution credentials to original software author John Marq E. Ramos.</h2>";
+                throw new Error("Application Authorization Revoked.");
+            }
+        })();
+
+        // Stylized Developer Console Signature
+        console.log(
+            "%c━ Automated School Scheduler Pro v6.0 Ultimate ━\n%cIntellectual Property of John Marq E. Ramos\n%cAll Rights Reserved © 2026",
+            "color: #4f46e5; font-size: 16px; font-weight: bold; font-family: sans-serif;",
+            "color: #0f172a; font-size: 13px; font-weight: 600; font-family: sans-serif;",
+            "color: #64748b; font-size: 11px; font-family: sans-serif;"
+        );
+
+        function toggleSidebarMenu() { document.querySelector('.sidebar').classList.toggle('hidden'); }
+        function toggleFullscreenMode() {
+            let targetContainer = document.getElementById('timetableContainer');
+            if (!document.fullscreenElement) { targetContainer.requestFullscreen().catch(err => alert(`Fullscreen failed: ${err.message}`)); } 
+            else { document.exitFullscreen(); }
+        }
+
+        window.addEventListener('beforeprint', () => {
+            const mode = document.getElementById('viewMode').value;
+            const filterVal = document.getElementById('filterValue').value;
+            let headerText = "All Timetables Overview";
+            if (mode !== 'all' && filterVal) {
+                const modeLabel = mode.charAt(0).toUpperCase() + mode.slice(1);
+                headerText = `${modeLabel}: ${filterVal}`;
+            }
+            document.getElementById('printHeader').innerText = headerText;
+            document.getElementById('printFooter').innerText = `Printed on: ${new Date().toLocaleString()} | Scheduler Pro ${APP_VERSION}`;
+        });
+
+        function togglePanel(panelId, headerEl) {
+            const panel = document.getElementById(panelId);
+            const icon = headerEl.querySelector('.toggle-icon');
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active'); icon.style.transform = 'rotate(0deg)';
+            } else {
+                panel.classList.add('active'); icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function toggleAdvancedMenus() {
+            const wrapper = document.getElementById('advancedMenusWrapper');
+            wrapper.style.display = wrapper.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        let roomsPool = []; let teachersPool = []; let subjectsPool = []; let sectionsPool = [];
+        let excludedRooms = []; // Exclusion array
+        let scheduledClasses = [];
+        let classIdCounter = 0; let currentEditingId = null; let currentViewingId = null;
+        let currentBackupName = "New Session"; 
+        
+        let maxTeacherHours = 27;
+
+        const colors = ['#fee2e2', '#dbeafe', '#dcfce7', '#fef9c3', '#f3e8ff', '#fce7f3', '#ffedd5', '#e0f2fe', '#ccfbf1'];
+        let colorIndex = 0;
+        const START_MINS = 450; const END_MINS = 1080; const PIXELS_PER_HALF_HOUR = 40;
+
+        function escapeHTML(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+        }
+
+        function clearAllErrors() {
+            document.getElementById('sidebarErrorBanner').style.display = 'none';
+            document.getElementById('topbarErrorBanner').style.display = 'none';
+            document.getElementById('modalErrorBanner').style.display = 'none';
+        }
+
+        function showSidebarError(msg) { let b = document.getElementById('sidebarErrorBanner'); b.innerText = msg; b.style.display = 'block'; }
+        function showTopbarError(msg) { let b = document.getElementById('topbarErrorBanner'); b.innerText = msg; b.style.display = 'block'; setTimeout(() => b.style.display='none', 5000); }
+
+        function isSharedRoom(roomName) {
+            if(!roomName) return false; let r = roomName.toLowerCase().trim();
+            return r === 'faculty' || r === 'consultation room';
+        }
+
+        function setDropdownToFixedValue(dropdownId, value) {
+            let dropdown = document.getElementById(dropdownId);
+            if (dropdown) { dropdown.innerHTML = `<option value="${value}">${value}</option>`; dropdown.value = value; dropdown.disabled = true; }
+        }
+
+        function resetDropdownToPool(dropdownId, includeAuto = false) {
+            let dropdown = document.getElementById(dropdownId); if(!dropdown) return;
+            dropdown.innerHTML = includeAuto ? '<option value="auto">Auto-Assign (Any Vacant)</option>' : '';
+            roomsPool.forEach(room => { 
+                let r = room.trim(); if(r.length > 0) dropdown.innerHTML += `<option value="${r}">${r}</option>`; 
+            });
+            dropdown.disabled = false;
+        }
+
+        function toggleExcludeRooms() {
+            const roomSel = document.getElementById('preferredRoom');
+            const excludeDiv = document.getElementById('excludeRoomContainer');
+            if(roomSel && excludeDiv) {
+                excludeDiv.style.display = roomSel.value === 'auto' ? 'flex' : 'none';
+            }
+        }
+
+        function renderExcludeRoomList() {
+            const container = document.getElementById('excludeRoomList');
+            if (!container) return;
+            container.innerHTML = '';
+            roomsPool.sort().forEach(r => {
+                if (!isSharedRoom(r)) { 
+                    let isChecked = excludedRooms.includes(r) ? 'checked' : '';
+                    container.innerHTML += `<div class="checkbox-item"><input type="checkbox" value="${r}" class="exclude-room-cb" onchange="updateExcludeRoomsArr()" ${isChecked}><label>${r}</label></div>`; 
+                }
+            });
+        }
+
+        function updateExcludeRoomsArr() {
+            excludedRooms = [];
+            document.querySelectorAll('.exclude-room-cb:checked').forEach(cb => excludedRooms.push(cb.value));
+            saveToLocal();
+        }
+
+        window.updateMaxHours = function() {
+            let val = parseFloat(document.getElementById('targetTeachHours').value);
+            if (!isNaN(val) && val > 0) {
+                maxTeacherHours = val;
+                saveToLocal();
+                renderWorkloadAnalytics();
+            }
+        };
+
+        function saveToLocal() {
+            const data = {
+                roomsPool, teachersPool, subjectsPool, sectionsPool, excludedRooms, scheduledClasses, classIdCounter, colorIndex, currentBackupName,
+                prefs: {
+                    font: document.getElementById('prefFont').value, size: document.getElementById('prefSize').value, align: document.getElementById('prefAlign').value,
+                    titleBold: document.getElementById('prefTitleBold').checked, titleItalic: document.getElementById('prefTitleItalic').checked,
+                    detBold: document.getElementById('prefDetailsBold').checked, detItalic: document.getElementById('prefDetailsItalic').checked,
+                    maxTeacherHours: maxTeacherHours
+                }
+            };
+            localStorage.setItem('schoolSchedulerProUltimateData', JSON.stringify(data));
+            const ind = document.getElementById('autoSaveIndicator'); ind.style.opacity = '1'; setTimeout(() => ind.style.opacity = '0.3', 2000);
+        }
+
+        function loadFromLocal() {
+            const saved = localStorage.getItem('schoolSchedulerProUltimateData');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    roomsPool = data.roomsPool || []; teachersPool = data.teachersPool || []; subjectsPool = data.subjectsPool || []; sectionsPool = data.sectionsPool || [];
+                    excludedRooms = data.excludedRooms || []; scheduledClasses = data.scheduledClasses || []; classIdCounter = data.classIdCounter || 0; colorIndex = data.colorIndex || 0;
+                    currentBackupName = data.currentBackupName || "New Session";
+                    let badgeText = document.getElementById('backupNameText'); if (badgeText) badgeText.innerText = currentBackupName;
+                    
+                    if (data.prefs) {
+                        document.getElementById('prefFont').value = data.prefs.font || "'Inter', 'Segoe UI', Tahoma, Geneva, sans-serif";
+                        document.getElementById('prefSize').value = data.prefs.size || "12";
+                        document.getElementById('fontSizeLabel').innerText = (data.prefs.size || "12") + 'px';
+                        document.getElementById('prefAlign').value = data.prefs.align || "left";
+                        if(data.prefs.titleBold !== undefined) document.getElementById('prefTitleBold').checked = data.prefs.titleBold;
+                        if(data.prefs.titleItalic !== undefined) document.getElementById('prefTitleItalic').checked = data.prefs.titleItalic;
+                        if(data.prefs.detBold !== undefined) document.getElementById('prefDetailsBold').checked = data.prefs.detBold;
+                        if(data.prefs.detItalic !== undefined) document.getElementById('prefDetailsItalic').checked = data.prefs.detItalic;
+                        if(data.prefs.maxTeacherHours !== undefined) {
+                            maxTeacherHours = data.prefs.maxTeacherHours;
+                            document.getElementById('targetTeachHours').value = maxTeacherHours;
+                        }
+                    }
+                } catch(e) { console.error("Could not load local storage", e); }
+            }
+        }
+
+        function triggerUpdate() { 
+            renderClasses(); saveToLocal(); renderRoomsUi(); renderTeachersUi(); renderSubjectsUi(); renderSectionsUi();
+        }
+
+        function startNewSession() {
+            if (confirm("Start a new session? Your existing data will be safely auto-saved to a 'Previous Session' state.")) {
+                const currentData = { roomsPool, teachersPool, subjectsPool, sectionsPool, excludedRooms, scheduledClasses, classIdCounter, colorIndex, currentBackupName,
+                    prefs: { font: document.getElementById('prefFont').value, size: document.getElementById('prefSize').value, align: document.getElementById('prefAlign').value, titleBold: document.getElementById('prefTitleBold').checked, titleItalic: document.getElementById('prefTitleItalic').checked, detBold: document.getElementById('prefDetailsBold').checked, detItalic: document.getElementById('prefDetailsItalic').checked, maxTeacherHours: maxTeacherHours }
+                };
+                localStorage.setItem('schoolSchedulerProUltimateData_PreviousSession', JSON.stringify(currentData));
+
+                roomsPool = []; teachersPool = []; subjectsPool = []; sectionsPool = []; excludedRooms = []; scheduledClasses = []; classIdCounter = 0; colorIndex = 0;
+                currentBackupName = "New Session"; document.getElementById('backupNameText').innerText = currentBackupName;
+                document.getElementById('viewMode').value = 'all'; updateFilterOptions(null, true); triggerUpdate(); alert("A fresh new session has started!");
+            }
+        }
+
+        function renderRoomsUi() {
+            const container = document.getElementById('roomsUiList'); if(!container) return; container.innerHTML = '';
+            if (roomsPool.length === 0) { container.innerHTML = '<div style="font-size: 0.85rem; color: #94a3b8; text-align: center; padding: 5px;">No rooms in pool</div>'; return; }
+            roomsPool.forEach((room, index) => {
+                let row = document.createElement('div'); row.className = "list-item";
+                row.innerHTML = `<span>${escapeHTML(room)}</span><div class="list-actions"><button class="btn-secondary btn-small" onclick="editRoomInline(${index})">Edit</button><button class="btn-danger btn-small" onclick="removeRoomInline(${index})">Remove</button></div>`;
+                container.appendChild(row);
+            });
+            renderExcludeRoomList();
+        }
+
+        function addRoomFromUI() {
+            clearAllErrors(); let input = document.getElementById('newRoomInput'); let val = input.value.trim(); if(!val) return;
+            if(roomsPool.map(r => r.toLowerCase()).includes(val.toLowerCase())) { showSidebarError("Room already exists."); return; }
+            roomsPool.push(val); input.value = '';
+            if(['class', 'homeroom', 'studentOrg'].includes(document.getElementById('taskType').value)) {
+                let currentPref = document.getElementById('preferredRoom').value;
+                resetDropdownToPool('preferredRoom', true);
+                if (currentPref === 'auto' || roomsPool.includes(currentPref)) document.getElementById('preferredRoom').value = currentPref;
+            }
+            triggerUpdate();
+        }
+
+        function editRoomInline(index) {
+            let oldName = roomsPool[index]; let newName = prompt("Edit Room Name:", oldName);
+            if(!newName || newName.trim() === oldName) return; newName = newName.trim();
+            if(roomsPool.map(r => r.toLowerCase()).includes(newName.toLowerCase())) { alert("Name already exists."); return; }
+            scheduledClasses.forEach(c => { if(!c.isLunch && c.room === oldName) c.room = newName; });
+            if(excludedRooms.includes(oldName)) excludedRooms[excludedRooms.indexOf(oldName)] = newName;
+            roomsPool[index] = newName;
+            if(['class', 'homeroom', 'studentOrg'].includes(document.getElementById('taskType').value)) resetDropdownToPool('preferredRoom', true);
+            updateFilterOptions(document.getElementById('viewMode').value === 'room' && document.getElementById('filterValue').value === oldName ? newName : true, false); triggerUpdate();
+        }
+
+        function removeRoomInline(index) {
+            let roomName = roomsPool[index];
+            if(scheduledClasses.some(c => !c.isLunch && c.room === roomName)) {
+                if(!confirm(`Warning: Classes assigned to "${roomName}". Proceed?`)) return;
+            }
+            roomsPool.splice(index, 1);
+            excludedRooms = excludedRooms.filter(r => r !== roomName);
+            if(['class', 'homeroom', 'studentOrg'].includes(document.getElementById('taskType').value)) resetDropdownToPool('preferredRoom', true);
+            updateFilterOptions(true, false); triggerUpdate();
+        }
+
+        function renderSubjectsUi() {
+            const container = document.getElementById('subjectsUiList'); const datalist = document.getElementById('subjectDatalist'); const editDatalist = document.getElementById('editSubjectDatalist');
+            if(container) container.innerHTML = ''; if(datalist) datalist.innerHTML = ''; if(editDatalist) editDatalist.innerHTML = '';
+            
+            if (subjectsPool.length === 0 && scheduledClasses.length > 0) {
+                let subjectsSet = new Set();
+                scheduledClasses.forEach(c => { if (!c.isLunch && ['class','homeroom','studentOrg'].includes(c.taskType) && c.subject) subjectsSet.add(c.subject.trim()); });
+                subjectsPool = Array.from(subjectsSet).sort();
+            }
+
+            subjectsPool.sort().forEach(sub => {
+                if(datalist) datalist.innerHTML += `<option value="${escapeHTML(sub)}">`;
+                if(editDatalist) editDatalist.innerHTML += `<option value="${escapeHTML(sub)}">`;
+            });
+
+            if(!container) return;
+            if (subjectsPool.length === 0) { container.innerHTML = '<div style="font-size: 0.85rem; color: #94a3b8; text-align: center; padding: 5px;">No subjects in pool</div>'; return; }
+            subjectsPool.forEach((sub, index) => {
+                let row = document.createElement('div'); row.className = "list-item";
+                row.innerHTML = `<span>${escapeHTML(sub)}</span><div class="list-actions"><button class="btn-secondary btn-small" onclick="editSubjectInline(${index})">Edit</button><button class="btn-danger btn-small" onclick="removeSubjectInline(${index})">Remove</button></div>`;
+                container.appendChild(row);
+            });
+        }
+
+        function addSubjectFromUI() {
+            clearAllErrors(); let input = document.getElementById('newSubjectInput'); let val = input.value.trim(); if (!val) return;
+            if (subjectsPool.map(s => s.toLowerCase()).includes(val.toLowerCase())) { showSidebarError("Subject already exists."); return; }
+            subjectsPool.push(val); input.value = ''; triggerUpdate();
+        }
+
+        function editSubjectInline(index) {
+            let oldName = subjectsPool[index]; let newName = prompt("Edit Subject Name:", oldName);
+            if(!newName || newName.trim() === oldName) return; newName = newName.trim();
+            if(subjectsPool.map(s => s.toLowerCase()).includes(newName.toLowerCase())) { alert("Name already exists."); return; }
+            scheduledClasses.forEach(c => { if (!c.isLunch && c.subject === oldName) c.subject = newName; });
+            subjectsPool[index] = newName; triggerUpdate();
+        }
+
+        function removeSubjectInline(index) {
+            let subName = subjectsPool[index];
+            if (!confirm(`Permanently delete subject "${subName}" and ALL associated classes?`)) return;
+            scheduledClasses = scheduledClasses.filter(c => c.isLunch || c.subject !== subName);
+            subjectsPool.splice(index, 1); triggerUpdate();
+        }
+
+        function renderSectionsUi() {
+            const container = document.getElementById('sectionsUiList'); const sectionSelect = document.getElementById('section'); const editSectionSelect = document.getElementById('editSection');
+            if (container) container.innerHTML = '';
+            
+            if (sectionsPool.length === 0 && scheduledClasses.length > 0) {
+                let sectionsSet = new Set();
+                scheduledClasses.forEach(c => {
+                    if (!c.isLunch && c.section && c.section !== 'N/A') sectionsSet.add(c.section.trim());
+                    else if (c.isLunch && c.targetType === 'section' && c.targetName) sectionsSet.add(c.targetName.trim());
+                });
+                sectionsPool = Array.from(sectionsSet).sort();
+            }
+
+            let populateSelect = (selectEl) => {
+                if (!selectEl) return; selectEl.innerHTML = ''; selectEl.disabled = false;
+                if (sectionsPool.length === 0) { selectEl.innerHTML = '<option value="" disabled selected>Add sections in Setup</option>'; return; }
+                sectionsPool.sort().forEach(sec => selectEl.innerHTML += `<option value="${escapeHTML(sec)}">${escapeHTML(sec)}</option>`);
+            };
+
+            let taskType = document.getElementById('taskType') ? document.getElementById('taskType').value : 'class';
+            if (['class','homeroom'].includes(taskType)) populateSelect(sectionSelect);
+            let editTaskType = document.getElementById('editTaskType') ? document.getElementById('editTaskType').value : 'class';
+            if (['class','homeroom'].includes(editTaskType)) populateSelect(editSectionSelect);
+
+            if (!container) return;
+            if (sectionsPool.length === 0) { container.innerHTML = '<div style="font-size: 0.85rem; color: #94a3b8; text-align: center; padding: 5px;">No sections in pool</div>'; return; }
+            sectionsPool.sort().forEach((sec, index) => {
+                let row = document.createElement('div'); row.className = "list-item";
+                row.innerHTML = `<span>${escapeHTML(sec)}</span><div class="list-actions"><button class="btn-secondary btn-small" onclick="editSectionInline(${index})">Edit</button><button class="btn-danger btn-small" onclick="removeSectionInline(${index})">Remove</button></div>`;
+                container.appendChild(row);
+            });
+            handleBreakTargetChange();
+        }
+
+        function addSectionFromUI() {
+            clearAllErrors(); let input = document.getElementById('newSectionInput'); let val = input.value.trim(); if (!val) return;
+            if (sectionsPool.map(s => s.toLowerCase()).includes(val.toLowerCase())) { showSidebarError("Section already exists."); return; }
+            sectionsPool.push(val); input.value = ''; triggerUpdate();
+        }
+
+        function editSectionInline(index) {
+            let oldName = sectionsPool[index]; let newName = prompt("Edit Section:", oldName);
+            if(!newName || newName.trim() === oldName) return; newName = newName.trim();
+            if(sectionsPool.map(s => s.toLowerCase()).includes(newName.toLowerCase())) { alert("Name already exists."); return; }
+            scheduledClasses.forEach(c => {
+                if (!c.isLunch && c.section === oldName) c.section = newName;
+                else if (c.isLunch && c.targetType === 'section' && c.targetName === oldName) c.targetName = newName;
+            });
+            sectionsPool[index] = newName; updateFilterOptions(document.getElementById('viewMode').value === 'section' && document.getElementById('filterValue').value === oldName ? newName : true, false); triggerUpdate();
+        }
+
+        function removeSectionInline(index) {
+            let secName = sectionsPool[index];
+            if (!confirm(`Delete section "${secName}" and ALL of its records?`)) return;
+            scheduledClasses = scheduledClasses.filter(c => {
+                if (!c.isLunch && c.section === secName) return false;
+                if (c.isLunch && c.targetType === 'section' && c.targetName === secName) return false;
+                return true;
+            });
+            sectionsPool.splice(index, 1); updateFilterOptions(true, false); triggerUpdate();
+        }
+
+        function renderTeachersUi() {
+            const container = document.getElementById('teachersUiList'); const teacherSelect = document.getElementById('teacher'); const editTeacherSelect = document.getElementById('editTeacher');
+            if (container) container.innerHTML = ''; if (teacherSelect) teacherSelect.innerHTML = ''; if (editTeacherSelect) editTeacherSelect.innerHTML = '';
+            
+            if (teachersPool.length === 0 && scheduledClasses.length > 0) {
+                let teachersSet = new Set();
+                scheduledClasses.forEach(c => {
+                    if (!c.isLunch && c.teacher) teachersSet.add(c.teacher.trim());
+                    else if (c.isLunch && c.targetType === 'teacher' && c.targetName) teachersSet.add(c.targetName.trim());
+                });
+                teachersPool = Array.from(teachersSet).sort();
+            }
+
+            if (teachersPool.length === 0) {
+                if(container) container.innerHTML = '<div style="font-size: 0.85rem; color: #94a3b8; text-align: center; padding: 5px;">No teachers in pool</div>';
+                if(teacherSelect) teacherSelect.innerHTML = '<option value="" disabled selected>Add in Setup</option>';
+                if(editTeacherSelect) editTeacherSelect.innerHTML = '<option value="" disabled selected>No teachers</option>';
+                return;
+            }
+            
+            teachersPool.sort().forEach((teacherName, index) => {
+                if(teacherSelect) teacherSelect.innerHTML += `<option value="${escapeHTML(teacherName)}">${escapeHTML(teacherName)}</option>`;
+                if(editTeacherSelect) editTeacherSelect.innerHTML += `<option value="${escapeHTML(teacherName)}">${escapeHTML(teacherName)}</option>`;
+                if(container) {
+                    let row = document.createElement('div'); row.className = "list-item";
+                    row.innerHTML = `<span>${escapeHTML(teacherName)}</span><div class="list-actions"><button class="btn-secondary btn-small" onclick="editTeacherInline(${index})">Edit</button><button class="btn-danger btn-small" onclick="removeTeacherInline(${index})">Remove</button></div>`;
+                    container.appendChild(row);
+                }
+            });
+            handleBreakTargetChange();
+        }
+
+        function addTeacherFromUI() {
+            clearAllErrors(); let input = document.getElementById('newTeacherInput'); let val = input.value.trim(); if (!val) return;
+            if (teachersPool.map(t => t.toLowerCase()).includes(val.toLowerCase())) { showSidebarError("Teacher already exists."); return; }
+            teachersPool.push(val); input.value = ''; triggerUpdate();
+        }
+
+        function editTeacherInline(index) {
+            let oldName = teachersPool[index]; let newName = prompt("Edit Teacher Name:", oldName);
+            if(!newName || newName.trim() === oldName) return; newName = newName.trim();
+            if(teachersPool.map(t => t.toLowerCase()).includes(newName.toLowerCase())) { alert("Name already exists."); return; }
+            scheduledClasses.forEach(c => {
+                if (!c.isLunch && c.teacher === oldName) c.teacher = newName;
+                else if (c.isLunch && c.targetType === 'teacher' && c.targetName === oldName) c.targetName = newName;
+            });
+            teachersPool[index] = newName; updateFilterOptions(document.getElementById('viewMode').value === 'teacher' && document.getElementById('filterValue').value === oldName ? newName : true, false); triggerUpdate();
+        }
+
+        function removeTeacherInline(index) {
+            let teacherName = teachersPool[index];
+            if (!confirm(`Delete teacher "${teacherName}" and ALL associated tasks?`)) return;
+            scheduledClasses = scheduledClasses.filter(c => {
+                if (!c.isLunch && c.teacher === teacherName) return false;
+                if (c.isLunch && c.targetType === 'teacher' && c.targetName === teacherName) return false;
+                return true;
+            });
+            teachersPool.splice(index, 1); updateFilterOptions(true, false); triggerUpdate();
+        }
+
+        function handleTaskTypeChange() {
+            let type = document.getElementById('taskType').value;
+            let subInput = document.getElementById('subject');
+            
+            subInput.disabled = false; document.getElementById('section').disabled = false; document.getElementById('preferredRoom').disabled = false;
+
+            if(type === 'admin') {
+                subInput.value = 'Administrative Task'; subInput.disabled = true;
+                setDropdownToFixedValue('section', 'N/A'); setDropdownToFixedValue('preferredRoom', 'Faculty');
+            } else if(type === 'consult') {
+                subInput.value = 'Consultation Time'; subInput.disabled = true;
+                setDropdownToFixedValue('section', 'N/A'); setDropdownToFixedValue('preferredRoom', 'Consultation Room');
+            } else if(type === 'homeroom') {
+                subInput.value = 'Homeroom'; subInput.disabled = true;
+                renderSectionsUi(); resetDropdownToPool('preferredRoom', true);
+            } else if(type === 'studentOrg') {
+                subInput.value = 'Student Org in Club'; subInput.disabled = true;
+                setDropdownToFixedValue('section', 'N/A'); resetDropdownToPool('preferredRoom', true);
+            } else {
+                subInput.value = ''; renderSectionsUi(); resetDropdownToPool('preferredRoom', true);
+            }
+            toggleExcludeRooms();
+        }
+
+        function handleEditTaskTypeChange() {
+            let type = document.getElementById('editTaskType').value;
+            let subInput = document.getElementById('editSubject');
+            
+            subInput.disabled = false; document.getElementById('editSection').disabled = false; document.getElementById('editRoom').disabled = false;
+
+            if(type === 'admin') {
+                subInput.value = 'Administrative Task'; subInput.disabled = true;
+                setDropdownToFixedValue('editSection', 'N/A'); setDropdownToFixedValue('editRoom', 'Faculty');
+            } else if(type === 'consult') {
+                subInput.value = 'Consultation Time'; subInput.disabled = true;
+                setDropdownToFixedValue('editSection', 'N/A'); setDropdownToFixedValue('editRoom', 'Consultation Room');
+            } else if(type === 'homeroom') {
+                subInput.value = 'Homeroom'; subInput.disabled = true;
+            } else if(type === 'studentOrg') {
+                subInput.value = 'Student Org in Club'; subInput.disabled = true;
+                setDropdownToFixedValue('editSection', 'N/A');
+            }
+            filterAvailableRoomsInEdit();
+        }
+
+        function generateTimeSlots() { let slots = []; for (let t = START_MINS; t < END_MINS; t += 30) slots.push(t); return slots; }
+        const timeSlots = generateTimeSlots();
+
+        function minutesToTimeStr(min) {
+            let h = Math.floor(min / 60); let m = min % 60; let ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12; h = h ? h : 12; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+        }
+
+        function initData() {
+            let breakStartSelect = document.getElementById('breakStart'); let editStartSelect = document.getElementById('editStart');
+            timeSlots.forEach(slot => {
+                let timeStr = minutesToTimeStr(slot);
+                breakStartSelect.innerHTML += `<option value="${slot}" ${slot === 720 ? 'selected' : ''}>${timeStr}</option>`;
+                editStartSelect.innerHTML += `<option value="${slot}">${timeStr}</option>`;
+            });
+            loadFromLocal(); buildCalendarGrid(); renderRoomsUi(); renderTeachersUi(); renderSubjectsUi(); renderSectionsUi();
+            handleTaskTypeChange(); updateFilterOptions(null, false);
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+        function dragStart(ev, id) { clearAllErrors(); ev.dataTransfer.setData("classId", id); setTimeout(() => { let el = document.getElementById(`card-${id}`); if(el) el.classList.add('dragging'); }, 0); }
+        function dragEnd(ev, id) { let el = document.getElementById(`card-${id}`); if(el) el.classList.remove('dragging'); }
+
+        function handleDrop(ev, day) {
+            ev.preventDefault(); let id = parseInt(ev.dataTransfer.getData("classId"));
+            let el = document.getElementById(`card-${id}`); if(el) el.classList.remove('dragging');
+
+            let targetArea = document.getElementById(`area-${day}`); let rect = targetArea.getBoundingClientRect(); let y = ev.clientY - rect.top;
+            let slotsFromStart = Math.round(y / PIXELS_PER_HALF_HOUR); let newStart = START_MINS + (slotsFromStart * 30);
+            
+            let originalClass = scheduledClasses.find(c => c.id === id); if (!originalClass) return;
+            if (newStart < START_MINS) newStart = START_MINS; if (newStart + originalClass.duration > END_MINS) newStart = END_MINS - originalClass.duration;
+            
+            let proposedUpdate = { ...originalClass, day: day, start: newStart };
+            if (checkHardConflict(proposedUpdate, scheduledClasses, id)) { showTopbarError("Move aborted: Room or Schedule Conflict."); return; }
+            if (!proposedUpdate.isLunch && checkFatigue(proposedUpdate, scheduledClasses, id)) { if(!confirm("Warning: Exceeds 3 continuous teaching hours. Move anyway?")) return; }
+            
+            scheduledClasses[scheduledClasses.findIndex(c => c.id === id)] = proposedUpdate; triggerUpdate();
+        }
+
+        function buildCalendarGrid() {
+            const wrapper = document.getElementById('calendarWrapper'); wrapper.innerHTML = '';
+            let timeCol = document.createElement('div'); timeCol.className = 'time-labels'; timeCol.innerHTML = '<div class="time-label-header"></div>';
+            timeSlots.forEach(slot => { timeCol.innerHTML += `<div class="time-slot-label">${minutesToTimeStr(slot)}</div>`; });
+            wrapper.appendChild(timeCol);
+
+            weekdays.forEach(day => {
+                let dayCol = document.createElement('div'); dayCol.className = 'day-column'; dayCol.id = `col-${day}`;
+                dayCol.innerHTML = `<div class="day-header">${day}</div><div class="day-events-area" id="area-${day}" ondragover="allowDrop(event)" ondrop="handleDrop(event, '${day}')"></div><div class="column-resizer"></div>`;
+                wrapper.appendChild(dayCol);
+            });
+            initResizers();
+        }
+
+        let isResizing = false; let currentResizer = null; let startX = 0; let startWidth = 0;
+        function initResizers() {
+            document.querySelectorAll('.column-resizer').forEach(resizer => {
+                resizer.addEventListener('mousedown', function(e) {
+                    isResizing = true; currentResizer = e.target; startX = e.pageX; startWidth = currentResizer.parentElement.offsetWidth;
+                    currentResizer.classList.add('resizing'); document.body.classList.add('resizing-active'); e.preventDefault(); 
+                });
+            });
+        }
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing || !currentResizer) return;
+            const newWidth = Math.max(120, startWidth + (e.pageX - startX));
+            const col = currentResizer.parentElement; col.style.flex = 'none'; col.style.width = newWidth + 'px'; col.style.minWidth = newWidth + 'px';
+        });
+        document.addEventListener('mouseup', function(e) {
+            if (isResizing) { isResizing = false; if (currentResizer) currentResizer.classList.remove('resizing'); currentResizer = null; document.body.classList.remove('resizing-active'); }
+        });
+        window.resetColumnWidths = function() { document.querySelectorAll('.day-column').forEach(col => { col.style.flex = '1'; col.style.width = ''; col.style.minWidth = '120px'; }); };
+
+        function syncSidebarWithFilter() {
+            const mode = document.getElementById('viewMode').value; const val = document.getElementById('filterValue').value;
+            if (!val || val === "(No data)" || val === "") return;
+            if (mode === 'teacher') document.getElementById('teacher').value = val;
+            else if (mode === 'section') document.getElementById('section').value = val;
+            else if (mode === 'room') {
+                const taskTypeSelect = document.getElementById('taskType');
+                if (!['class','homeroom','studentOrg'].includes(taskTypeSelect.value)) { taskTypeSelect.value = 'class'; handleTaskTypeChange(); }
+                document.getElementById('preferredRoom').value = val; toggleExcludeRooms();
+            }
+        }
+        function handleFilterValueChange() { renderClasses(); syncSidebarWithFilter(); }
+
+        function updateFilterOptions(autoSelectVal = null, triggerSync = false) {
+            const mode = document.getElementById('viewMode').value; const filterSelect = document.getElementById('filterValue'); const currentValue = filterSelect.value;
+            if (mode === 'all') { filterSelect.style.display = 'none'; renderClasses(); return; }
+            filterSelect.style.display = 'block'; filterSelect.innerHTML = '';
+            
+            let optionsSet = new Set();
+            scheduledClasses.forEach(c => {
+                if(c.isLunch) {
+                    if (mode === 'teacher' && c.targetType === 'teacher') optionsSet.add(c.targetName);
+                    if (mode === 'section' && c.targetType === 'section') optionsSet.add(c.targetName);
+                } else {
+                    if (mode === 'teacher') optionsSet.add(c.teacher);
+                    if (mode === 'section') optionsSet.add(c.section);
+                    if (mode === 'room') optionsSet.add(c.room);
+                }
+            });
+            if (mode === 'room') roomsPool.forEach(r => optionsSet.add(r));
+            if (mode === 'teacher') teachersPool.forEach(t => optionsSet.add(t));
+            if (mode === 'section') sectionsPool.forEach(s => optionsSet.add(s));
+            
+            if (optionsSet.size === 0) { filterSelect.innerHTML = '<option value="">(No data)</option>'; } 
+            else {
+                Array.from(optionsSet).sort().forEach(opt => {
+                    let optionEl = document.createElement('option'); optionEl.value = opt; optionEl.innerText = opt;
+                    if ((autoSelectVal && typeof autoSelectVal === 'string' && opt === autoSelectVal) || (autoSelectVal === true && opt === currentValue)) optionEl.selected = true;
+                    filterSelect.appendChild(optionEl);
+                });
+            }
+            renderClasses(); if (triggerSync) syncSidebarWithFilter();
+        }
+
+        function checkHardConflict(proposed, timelineContext, currentId = null) {
+            for (let t = proposed.start; t < proposed.start + proposed.duration; t += 30) {
+                if (!timeSlots.includes(t)) return true; 
+                let overlap = timelineContext.some(c => {
+                    if (currentId !== null && c.id === currentId) return false;
+                    let matchTime = (c.day === proposed.day && t >= c.start && t < (c.start + c.duration));
+                    if (!matchTime) return false;
+
+                    if (proposed.isLunch) {
+                        if (c.isLunch) return (c.targetType === proposed.targetType && c.targetName === proposed.targetName);
+                        return proposed.targetType === 'teacher' ? (c.teacher === proposed.targetName) : (c.section === proposed.targetName);
+                    } else {
+                        if (c.isLunch) return c.targetType === 'teacher' ? (proposed.teacher === c.targetName) : (proposed.section === c.targetName);
+                        let sectionConflict = (proposed.section !== 'N/A' && c.section === proposed.section);
+                        let roomConflict = false;
+                        if (!isSharedRoom(proposed.room)) roomConflict = (c.room === proposed.room);
+                        return (roomConflict || c.teacher === proposed.teacher || sectionConflict);
+                    }
+                });
+                if (overlap) return true;
+            }
+            return false;
+        }
+
+        function checkFatigue(proposed, timelineContext, currentId = null) {
+            if (proposed.isLunch) return false; 
+            let dynamicTimeline = currentId !== null ? timelineContext.filter(c => c.id !== currentId) : timelineContext;
+            return checkTargetFatigue('teacher', proposed.teacher, proposed, dynamicTimeline) || (proposed.section !== 'N/A' && checkTargetFatigue('section', proposed.section, proposed, dynamicTimeline));
+        }
+
+        function checkTargetFatigue(type, name, proposed, dynamicTimeline) {
+            let daily = dynamicTimeline.filter(c => {
+                if (c.day !== proposed.day) return false;
+                if (c.isLunch) return c.targetType === type && c.targetName === name;
+                return type === 'teacher' ? c.teacher === name : c.section === name;
+            });
+            let totalTimeline = [...daily, proposed].sort((a,b) => a.start - b.start);
+            let continuous = 0; let prevEnd = null; let sequenceIncludesProposed = false;
+            for (let block of totalTimeline) {
+                if (block.isLunch || block.taskType !== 'class') { continuous = 0; prevEnd = block.start + block.duration; sequenceIncludesProposed = false; continue; }
+                if (prevEnd === null || block.start === prevEnd) continuous += block.duration; else { continuous = block.duration; sequenceIncludesProposed = false; }
+                if (block === proposed) sequenceIncludesProposed = true;
+                if (continuous > 180 && sequenceIncludesProposed) return true;
+                prevEnd = block.start + block.duration;
+            }
+            return false;
+        }
+
+        function handleAddSchedule() {
+            clearAllErrors();
+            let taskType = document.getElementById('taskType').value;
+            let teacher = document.getElementById('teacher') ? document.getElementById('teacher').value : '';
+            let subject = document.getElementById('subject').value.trim();
+            let section = document.getElementById('section') ? document.getElementById('section').value : '';
+            let description = document.getElementById('description').value.trim();
+            let totalHours = parseFloat(document.getElementById('totalHours').value) * 60;
+            let sessionDuration = parseFloat(document.getElementById('duration').value) * 60;
+            let preferredRoom = document.getElementById('preferredRoom').value;
+            
+            let allowedDays = []; weekdays.forEach(d => { if(document.getElementById(`day-${d}`).checked) allowedDays.push(d); });
+
+            if(!teacher || !subject || !section) { showSidebarError("Complete Teacher, Subject, and Section."); return; }
+            if(allowedDays.length === 0) { showSidebarError("Pick at least one allowed weekday."); return; }
+
+            if (!subjectsPool.includes(subject) && ['class', 'homeroom', 'studentOrg'].includes(taskType)) {
+                subjectsPool.push(subject); renderSubjectsUi();
+            }
+
+            let sessionsNeeded = Math.ceil(totalHours / sessionDuration);
+            let temporaryAllocations = []; let color = colors[colorIndex % colors.length]; let sessionsBooked = 0;
+
+            if (taskType === 'class') {
+                if (sessionsNeeded > allowedDays.length) { showSidebarError(`Error: Need ${sessionsNeeded} sessions, but only picked ${allowedDays.length} days.`); return; }
+                let foundCommonSlot = false;
+                for (let slot of timeSlots) {
+                    let tempAllocations = []; let successfulDays = [];
+                    for (let day of allowedDays) {
+                        let targetRooms = preferredRoom === 'auto' ? roomsPool.filter(r => !isSharedRoom(r) && r.trim().length > 0 && !excludedRooms.includes(r)) : [preferredRoom];
+                        for (let room of targetRooms) {
+                            let proposed = { id: classIdCounter + tempAllocations.length, isLunch: false, taskType, teacher, subject, section, description, day, start: slot, duration: sessionDuration, room, color };
+                            let timelineContext = scheduledClasses.concat(temporaryAllocations, tempAllocations);
+                            if (!checkHardConflict(proposed, timelineContext) && !checkFatigue(proposed, timelineContext)) {
+                                tempAllocations.push(proposed); successfulDays.push(day); break; 
+                            }
+                        }
+                        if (successfulDays.length === sessionsNeeded) break; 
+                    }
+                    if (successfulDays.length === sessionsNeeded) { temporaryAllocations.push(...tempAllocations); classIdCounter += tempAllocations.length; sessionsBooked = sessionsNeeded; foundCommonSlot = true; break; }
+                }
+                if (!foundCommonSlot) { showSidebarError(`Scheduling Failed: No common, conflict-free ${sessionDuration/60}-hour block available across requested days.`); return; }
+            } else {
+                let sessionsPerDay = {}; allowedDays.forEach(d => sessionsPerDay[d] = 0);
+                let balancingRemainder = sessionsNeeded; while(balancingRemainder > 0) { for(let day of allowedDays) { if(balancingRemainder > 0) { sessionsPerDay[day]++; balancingRemainder--; } } }
+                for (let day of allowedDays) {
+                    let targetForThisDay = sessionsPerDay[day]; let bookedForThisDay = 0;
+                    for (let slot of timeSlots) {
+                        if (bookedForThisDay >= targetForThisDay) break;
+                        let targetRooms = preferredRoom === 'auto' ? roomsPool.filter(r => !isSharedRoom(r) && r.trim().length > 0 && !excludedRooms.includes(r)) : [preferredRoom];
+                        for (let room of targetRooms) {
+                            let proposed = { id: classIdCounter, isLunch: false, taskType, teacher, subject, section, description, day, start: slot, duration: sessionDuration, room, color };
+                            let timelineContext = scheduledClasses.concat(temporaryAllocations);
+                            if (!checkHardConflict(proposed, timelineContext) && !checkFatigue(proposed, timelineContext)) { temporaryAllocations.push(proposed); classIdCounter++; bookedForThisDay++; sessionsBooked++; break; }
+                        }
+                    }
+                }
+                if (sessionsBooked < sessionsNeeded) { showSidebarError(`Scheduling Failed: Found slots for ${sessionsBooked}/${sessionsNeeded} required sessions.`); return; }
+            }
+            
+            scheduledClasses = scheduledClasses.concat(temporaryAllocations); document.getElementById('description').value = '';
+            if(taskType === 'class') colorIndex++; 
+            
+            const mode = document.getElementById('viewMode').value;
+            let focusOnNewItem = true; 
+            if (mode === 'teacher') focusOnNewItem = teacher; else if (mode === 'section') focusOnNewItem = section; else if (mode === 'room' && preferredRoom !== 'auto') focusOnNewItem = preferredRoom;
+            updateFilterOptions(focusOnNewItem, false); triggerUpdate();
+        }
+
+        function handleBreakTargetChange() {
+            let type = document.getElementById('breakTargetType').value;
+            let targetSel = document.getElementById('breakTargetName');
+            targetSel.innerHTML = '';
+            let pool = type === 'teacher' ? teachersPool : sectionsPool;
+            pool.sort().forEach(item => { targetSel.innerHTML += `<option value="${escapeHTML(item)}">${escapeHTML(item)}</option>`; });
+        }
+
+        function handleAddBreak() {
+            clearAllErrors();
+            let targetType = document.getElementById('breakTargetType').value; let targetName = document.getElementById('breakTargetName').value;
+            let start = parseInt(document.getElementById('breakStart').value); let duration = parseInt(document.getElementById('breakDuration').value);
+            let allowedDays = []; weekdays.forEach(d => { if(document.getElementById(`b-day-${d}`).checked) allowedDays.push(d); });
+            if(!targetName) { showSidebarError("Specify Target name."); return; }
+            if(allowedDays.length === 0) { showSidebarError("Pick at least one day for the break."); return; }
+
+            let temporaryAllocations = [];
+            for(let day of allowedDays) {
+                let proposed = { id: classIdCounter, isLunch: true, targetType, targetName, day, start, duration };
+                if (checkHardConflict(proposed, scheduledClasses)) { showSidebarError(`Conflict: ${targetName} is already scheduled on ${day} during this time.`); return; }
+                temporaryAllocations.push(proposed); classIdCounter++;
+            }
+            scheduledClasses = scheduledClasses.concat(temporaryAllocations);
+            const mode = document.getElementById('viewMode').value; updateFilterOptions(mode === targetType ? targetName : true, false); triggerUpdate();
+        }
+
+        window.openViewModal = function(id) {
+            clearAllErrors(); currentViewingId = id; const target = scheduledClasses.find(c => c.id === id); if (!target) return;
+            document.getElementById('viewModalOverlay').style.display = 'flex';
+            let icon = '📚'; let title = ''; let subtitle = `${target.day} • ${minutesToTimeStr(target.start)} - ${minutesToTimeStr(target.start + target.duration)}`;
+            let body = ''; let safeTarget = escapeHTML(target.targetName); let safeTeacher = escapeHTML(target.teacher); let safeSubject = escapeHTML(target.subject); let safeSection = escapeHTML(target.section); let safeRoom = escapeHTML(target.room);
+
+            if (target.isLunch) { icon = '☕'; title = 'Break / Lunch'; body = `<strong>Target:</strong> ${safeTarget} (${target.targetType})<br>`; } 
+            else {
+                if (target.taskType === 'admin') icon = '📁'; else if (target.taskType === 'consult') icon = '🗣️'; else if (target.taskType === 'homeroom') icon = '🏠'; else if (target.taskType === 'studentOrg') icon = '♣️';
+                title = safeSubject; body += `<div style="margin-bottom: 4px;"><strong>Teacher:</strong> ${safeTeacher}</div>`;
+                if(['class', 'homeroom'].includes(target.taskType)) body += `<div style="margin-bottom: 4px;"><strong>Section:</strong> ${safeSection}</div>`;
+                body += `<div style="margin-bottom: 4px;"><strong>Room:</strong> ${safeRoom}</div>`;
+                if(target.description) body += `<div style="margin-top: 15px; font-style: italic; color: #475569; background: #fff; padding: 12px; border-radius: 8px; border: 1px dashed #cbd5e1;">💬 ${escapeHTML(target.description)}</div>`;
+            }
+            body += `<div style="margin-top: 15px; font-weight: 600; color: var(--primary);">⏳ Duration: ${(target.duration / 60).toFixed(1)} hrs (${target.duration} mins)</div>`;
+            document.getElementById('viewIcon').innerText = icon; document.getElementById('viewTitle').innerText = title; document.getElementById('viewSubtitle').innerText = subtitle; document.getElementById('viewBody').innerHTML = body;
+        };
+
+        window.closeViewModal = function() { document.getElementById('viewModalOverlay').style.display = 'none'; currentViewingId = null; };
+        window.proceedToEdit = function() { if(currentViewingId !== null) { let idToEdit = currentViewingId; closeViewModal(); openEditModal(idToEdit); } };
+
+        window.openEditModal = function(id) {
+            clearAllErrors(); currentEditingId = id; const target = scheduledClasses.find(c => c.id === id); if (!target) return;
+            if (target.isLunch) {
+                document.getElementById('modalTitle').innerText = "Modify Break Details"; document.getElementById('regularClassFields').style.display = 'none';
+                document.getElementById('editLunchGroup').style.display = 'flex'; document.getElementById('editLunchLabel').innerText = target.targetType === 'teacher' ? 'Teacher Name' : 'Section Name';
+                
+                let lunchTargetSel = document.getElementById('editLunchTarget'); lunchTargetSel.innerHTML = '';
+                let pool = target.targetType === 'teacher' ? teachersPool : sectionsPool;
+                pool.sort().forEach(item => { lunchTargetSel.innerHTML += `<option value="${escapeHTML(item)}">${escapeHTML(item)}</option>`; });
+                lunchTargetSel.value = target.targetName;
+            } else {
+                document.getElementById('modalTitle').innerText = "Modify Task Details"; document.getElementById('regularClassFields').style.display = 'block'; document.getElementById('editLunchGroup').style.display = 'none';
+                document.getElementById('editTaskType').value = target.taskType || 'class';
+                
+                let editTeacherSel = document.getElementById('editTeacher'); editTeacherSel.innerHTML = '';
+                teachersPool.sort().forEach(t => editTeacherSel.innerHTML += `<option value="${escapeHTML(t)}">${escapeHTML(t)}</option>`);
+                if (target.teacher !== 'N/A' && !teachersPool.includes(target.teacher)) editTeacherSel.innerHTML += `<option value="${escapeHTML(target.teacher)}">${escapeHTML(target.teacher)} (Unlisted)</option>`;
+                editTeacherSel.value = target.teacher;
+
+                let editSectionSel = document.getElementById('editSection'); editSectionSel.innerHTML = '';
+                sectionsPool.sort().forEach(s => editSectionSel.innerHTML += `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`);
+                if (target.section !== 'N/A' && !sectionsPool.includes(target.section)) editSectionSel.innerHTML += `<option value="${escapeHTML(target.section)}">${escapeHTML(target.section)} (Unlisted)</option>`;
+                editSectionSel.value = target.section;
+
+                document.getElementById('editSubject').value = target.subject;
+                document.getElementById('editDescription').value = target.description || '';
+                
+                handleEditTaskTypeChange();
+                filterAvailableRoomsInEdit();
+                
+                let editRoomEl = document.getElementById('editRoom');
+                if (!Array.from(editRoomEl.options).some(opt => opt.value === target.room)) editRoomEl.innerHTML += `<option value="${target.room}">${target.room} (Unlisted)</option>`;
+                editRoomEl.value = target.room;
+            }
+            document.getElementById('editDay').value = target.day; document.getElementById('editStart').value = target.start; document.getElementById('editDuration').value = target.duration; document.getElementById('editModalOverlay').style.display = 'flex';
+        };
+
+        window.closeEditModal = function() { document.getElementById('editModalOverlay').style.display = 'none'; currentEditingId = null; };
+
+        function filterAvailableRoomsInEdit() {
+            const editRoomSel = document.getElementById('editRoom'); if (!editRoomSel) return;
+            let currentSelectedRoom = editRoomSel.value;
+            const selectedDay = document.getElementById('editDay').value; const selectedStart = parseInt(document.getElementById('editStart').value);
+            const selectedDuration = parseInt(document.getElementById('editDuration').value); const selectedEnd = selectedStart + selectedDuration;
+            editRoomSel.innerHTML = '';
+            
+            let taskType = document.getElementById('editTaskType').value;
+            if(taskType === 'admin') { setDropdownToFixedValue('editRoom', 'Faculty'); return; } 
+            else if(taskType === 'consult') { setDropdownToFixedValue('editRoom', 'Consultation Room'); return; } 
+            else { editRoomSel.disabled = false; }
+
+            const originalClass = scheduledClasses.find(c => c.id === currentEditingId);
+
+            roomsPool.sort().forEach(r => {
+                if (isSharedRoom(r)) { editRoomSel.innerHTML += `<option value="${r}">${r}</option>`; return; }
+                const isOccupied = scheduledClasses.some(c => {
+                    if (c.id === currentEditingId) return false;
+                    if (c.day === selectedDay && !c.isLunch && c.room === r) {
+                        const cEnd = c.start + c.duration; return (selectedStart < cEnd) && (selectedEnd > c.start);
+                    }
+                    return false;
+                });
+                if (!isOccupied) editRoomSel.innerHTML += `<option value="${r}">${r}</option>`;
+            });
+
+            if (Array.from(editRoomSel.options).some(opt => opt.value === currentSelectedRoom)) editRoomSel.value = currentSelectedRoom;
+            else if (originalClass && originalClass.room && Array.from(editRoomSel.options).some(opt => opt.value === originalClass.room)) editRoomSel.value = originalClass.room;
+        }
+
+        window.saveEditClass = function() {
+            if (currentEditingId === null) return; const modalError = document.getElementById('modalErrorBanner'); modalError.style.display = 'none';
+            let original = scheduledClasses.find(c => c.id === currentEditingId);
+            let day = document.getElementById('editDay').value; let start = parseInt(document.getElementById('editStart').value); let duration = parseFloat(document.getElementById('editDuration').value);
+            let proposedUpdate;
+
+            if (original.isLunch) {
+                let targetName = document.getElementById('editLunchTarget').value.trim();
+                if(!targetName) { modalError.innerText = "Target name required."; modalError.style.display = 'block'; return; }
+                proposedUpdate = { ...original, targetName, day, start, duration };
+            } else {
+                let taskType = document.getElementById('editTaskType').value; let teacher = document.getElementById('editTeacher') ? document.getElementById('editTeacher').value : '';
+                let subject = document.getElementById('editSubject').value.trim(); let section = document.getElementById('editSection') ? document.getElementById('editSection').value : '';
+                let description = document.getElementById('editDescription').value.trim(); let room = document.getElementById('editRoom').value;
+                if (!teacher || !subject || !section) { modalError.innerText = "Please complete all fields."; modalError.style.display = 'block'; return; }
+                proposedUpdate = { ...original, taskType, teacher, subject, section, description, room, day, start, duration };
+            }
+            if (checkHardConflict(proposedUpdate, scheduledClasses, currentEditingId)) { modalError.innerText = "Time/Room Conflict detected with existing schedule."; modalError.style.display = 'block'; return; }
+            if (!proposedUpdate.isLunch && checkFatigue(proposedUpdate, scheduledClasses, currentEditingId)) { if(!confirm("Warning: Exceeds 3 continuous hours. Save anyway?")) return; }
+
+            let index = scheduledClasses.findIndex(c => c.id === currentEditingId);
+            if (index !== -1) scheduledClasses[index] = proposedUpdate;
+            
+            if (!proposedUpdate.isLunch && !subjectsPool.includes(proposedUpdate.subject) && ['class', 'homeroom', 'studentOrg'].includes(proposedUpdate.taskType)) {
+                subjectsPool.push(proposedUpdate.subject); renderSubjectsUi();
+            }
+
+            closeEditModal(); updateFilterOptions(true, false); triggerUpdate();
+        };
+
+        window.deleteClassFromModal = function() {
+            if (currentEditingId === null) return;
+            if (confirm("Permanently remove this record?")) { scheduledClasses = scheduledClasses.filter(c => c.id !== currentEditingId); closeEditModal(); updateFilterOptions(true, false); triggerUpdate(); }
+        };
+
+        function getFilteredClasses() {
+            const mode = document.getElementById('viewMode').value; const filterValue = document.getElementById('filterValue').value;
+            return scheduledClasses.filter(c => {
+                if (mode === 'all') { if (c.isLunch && c.targetType === 'teacher') return false; return true; }
+                if (c.isLunch) {
+                    if (mode === 'teacher') return c.targetType === 'teacher' && c.targetName === filterValue;
+                    if (mode === 'section') return c.targetType === 'section' && c.targetName === filterValue;
+                    return false;
+                } else {
+                    if (mode === 'teacher') return c.teacher === filterValue;
+                    if (mode === 'section') return c.section === filterValue;
+                    if (mode === 'room') return c.room === filterValue;
+                }
+            });
+        }
+
+        function renderWorkloadAnalytics() {
+            let container = document.getElementById('workloadAnalyticsContainer'); if(!container) return;
+            let metrics = {};
+            teachersPool.forEach(t => { metrics[t] = { classMins: 0, adminMins: 0, consultMins: 0, homeroomMins: 0, orgMins: 0 }; });
+
+            scheduledClasses.forEach(c => {
+                if(!c.isLunch && c.teacher && metrics[c.teacher]) {
+                    if(c.taskType === 'class') metrics[c.teacher].classMins += c.duration;
+                    else if(c.taskType === 'admin') metrics[c.teacher].adminMins += c.duration;
+                    else if(c.taskType === 'consult') metrics[c.teacher].consultMins += c.duration;
+                    else if(c.taskType === 'homeroom') metrics[c.teacher].homeroomMins += c.duration;
+                    else if(c.taskType === 'studentOrg') metrics[c.teacher].orgMins += c.duration;
+                }
+            });
+
+            let html = `<table class="workload-table"><thead><tr><th>Teacher</th><th>Regular Class</th><th>Admin Task</th><th>Consultation</th><th>Homeroom</th><th>Student Org</th><th>Total Hours</th><th>Status</th></tr></thead><tbody>`;
+
+            teachersPool.sort().forEach(t => {
+                let m = metrics[t]; 
+                
+                let regularHours = m.classMins / 60;
+                let totalHours = (m.classMins + m.adminMins + m.consultMins + m.homeroomMins + m.orgMins) / 60;
+                
+                let statusLabel = '<span class="load-ok">Balanced</span>';
+                let rowClass = '';
+                
+                if (totalHours === 0) {
+                    statusLabel = '<span style="color:#94a3b8;">Inactive</span>';
+                } else if (regularHours > maxTeacherHours) {
+                    statusLabel = `<span class="load-alert">⚠️ Overload (+${(regularHours - maxTeacherHours).toFixed(1)}h)</span>`;
+                    rowClass = 'class="row-overload"';
+                } else if (regularHours < maxTeacherHours) {
+                    statusLabel = `<span class="load-alert-under">📉 Underload (-${(maxTeacherHours - regularHours).toFixed(1)}h)</span>`;
+                } else {
+                    statusLabel = '<span class="load-ok">Balanced</span>';
+                }
+
+                html += `<tr ${rowClass}><strong><td>${escapeHTML(t)}</td></strong><td>${(m.classMins/60).toFixed(1)}h</td><td>${(m.adminMins/60).toFixed(1)}h</td><td>${(m.consultMins/60).toFixed(1)}h</td><td>${(m.homeroomMins/60).toFixed(1)}h</td><td>${(m.orgMins/60).toFixed(1)}h</td><td><strong>${totalHours.toFixed(1)} hrs</strong></td><td>${statusLabel}</td></tr>`;
+            });
+            html += '</tbody></table>'; container.innerHTML = html;
+        }
+
+        function renderClasses() {
+            weekdays.forEach(day => { let area = document.getElementById(`area-${day}`); if(area) area.innerHTML = ''; });
+
+            const prefFont = document.getElementById('prefFont').value; const prefSize = document.getElementById('prefSize').value + 'px'; const prefAlign = document.getElementById('prefAlign').value;
+            const titleStyle = `font-weight: ${document.getElementById('prefTitleBold').checked ? 'bold' : 'normal'}; font-style: ${document.getElementById('prefTitleItalic').checked ? 'italic' : 'normal'};`;
+            const detStyle = `font-weight: ${document.getElementById('prefDetailsBold').checked ? 'bold' : 'normal'}; font-style: ${document.getElementById('prefDetailsItalic').checked ? 'italic' : 'normal'};`;
+
+            const mode = document.getElementById('viewMode').value; const filterVal = document.getElementById('filterValue').value;
+            const analyticsPanel = document.getElementById('analyticsPanel');
+
+            if (mode === 'teacher' && filterVal) {
+                let teachMins = 0, adminMins = 0, consultMins = 0, otherMins = 0;
+                scheduledClasses.forEach(c => {
+                    if (!c.isLunch && c.teacher === filterVal) {
+                        if (c.taskType === 'admin') adminMins += c.duration;
+                        else if (c.taskType === 'consult') consultMins += c.duration;
+                        else if (c.taskType === 'class') teachMins += c.duration;
+                        else otherMins += c.duration;
+                    }
+                });
+                let totalMins = teachMins + adminMins + consultMins + otherMins;
+                document.getElementById('teachHoursBadge').innerHTML = `📖 ${(teachMins / 60).toFixed(1)}h Teaching`;
+                document.getElementById('adminHoursBadge').innerHTML = `📁 ${(adminMins / 60).toFixed(1)}h Admin`;
+                document.getElementById('consultHoursBadge').innerHTML = `🗣️ ${(consultMins / 60).toFixed(1)}h Consult`;
+                document.getElementById('totalHoursBadge').innerHTML = `⏱️ ${(totalMins / 60).toFixed(1)}h Total`;
+                analyticsPanel.style.display = 'flex';
+            } else { analyticsPanel.style.display = 'none'; }
+
+            let classesToRender = getFilteredClasses();
+            classesToRender.forEach(c => {
+                let area = document.getElementById(`area-${c.day}`); if(!area) return;
+                let topPosition = ((c.start - START_MINS) / 30) * PIXELS_PER_HALF_HOUR; let cardHeight = (c.duration / 30) * PIXELS_PER_HALF_HOUR;
+
+                let dayClasses = classesToRender.filter(other => other.day === c.day);
+                let overlaps = dayClasses.filter(other => Math.max(c.start, other.start) < Math.min(c.start + c.duration, other.start + other.duration)).sort((a, b) => a.id - b.id);
+                let widthPercent = 100 / overlaps.length; let leftPercent = overlaps.findIndex(o => o.id === c.id) * widthPercent;
+
+                let card = document.createElement('div'); card.id = `card-${c.id}`; card.className = c.isLunch ? 'class-card lunch-card' : 'class-card';
+                card.setAttribute('draggable', 'true'); card.setAttribute('ondragstart', `dragStart(event, ${c.id})`); card.setAttribute('ondragend', `dragEnd(event, ${c.id})`);
+                
+                if(!c.isLunch) {
+                    if (c.taskType === 'admin') { card.style.backgroundColor = '#fef08a'; card.style.borderLeftColor = '#ca8a04'; } 
+                    else if (c.taskType === 'consult') { card.style.backgroundColor = '#e9d5ff'; card.style.borderLeftColor = '#9333ea'; } 
+                    else if (c.taskType === 'homeroom') { card.style.backgroundColor = '#cffafe'; card.style.borderLeftColor = '#06b6d4'; } 
+                    else if (c.taskType === 'studentOrg') { card.style.backgroundColor = '#fce7f3'; card.style.borderLeftColor = '#db2777'; } 
+                    else { card.style.backgroundColor = c.color || '#e0f2fe'; }
+                }
+                
+                card.style.fontFamily = prefFont; card.style.fontSize = prefSize; card.style.textAlign = prefAlign;
+                card.style.top = `${topPosition}px`; card.style.height = `${cardHeight}px`; card.style.width = `${widthPercent}%`; card.style.left = `${leftPercent}%`; card.style.zIndex = 20 + Math.floor(topPosition); 
+                card.setAttribute('onclick', `openViewModal(${c.id})`); card.title = "Click to view details, or drag to move";
+
+                let safeSubject = escapeHTML(c.subject); let safeTeacher = escapeHTML(c.teacher); let safeSection = escapeHTML(c.section); let safeRoom = escapeHTML(c.room); let safeTarget = escapeHTML(c.targetName);
+                let descHtml = c.description ? `<div class="card-detail" style="font-style: italic; color: #475569; margin-top: 4px;">💬 ${escapeHTML(c.description)}</div>` : '';
+
+                if (c.isLunch) { card.innerHTML = `<div class="card-subject" style="text-align:center; margin-top:4px; ${titleStyle}">☕ BREAK</div><div class="card-detail" style="text-align:center; ${detStyle}">${safeTarget}</div>`; } 
+                else if (['admin','consult','studentOrg'].includes(c.taskType)) {
+                    let emoji = c.taskType === 'admin' ? '📁' : (c.taskType === 'consult' ? '🗣️' : '♣️');
+                    card.innerHTML = `<div class="card-subject" style="${titleStyle}">${emoji} ${safeSubject}</div><div class="card-detail" style="${detStyle}">Teacher: ${safeTeacher}</div><div class="card-detail" style="${detStyle}">Room: ${safeRoom}</div>${descHtml}`;
+                } else {
+                    let emoji = c.taskType === 'homeroom' ? '🏠 ' : '';
+                    card.innerHTML = `<div class="card-subject" style="${titleStyle}">${emoji}${safeSubject}</div><div class="card-detail" style="${detStyle}">Teacher: ${safeTeacher}</div><div class="card-detail" style="${detStyle}">Section: ${safeSection}</div><div class="card-detail" style="${detStyle}">Room: ${safeRoom}</div>${descHtml}`;
+                }
+                area.appendChild(card);
+            });
+            renderWorkloadAnalytics();
+        }
+
+        function clearTimetable() { 
+            if (confirm("WARNING: Are you sure you want to clear the entire timetable? Configured data pools will be preserved.")) {
+                scheduledClasses = []; document.getElementById('viewMode').value = 'all'; updateFilterOptions(null, true);
+                currentBackupName = "Current Session (Cleared)"; document.getElementById('backupNameText').innerText = currentBackupName;
+                triggerUpdate(); alert("Timetable cleared!");
+            }
+        }
+
+        function exportToCSV() {
+            let classesToRender = getFilteredClasses(); if(classesToRender.length === 0) { alert("No data to export."); return; }
+            let csvContent = "data:text/csv;charset=utf-8,Type,Day,Start Time,End Time,Subject,Teacher/Target,Section,Room,Description\n";
+            classesToRender.forEach(c => {
+                let start = minutesToTimeStr(c.start); let end = minutesToTimeStr(c.start + c.duration);
+                if (c.isLunch) csvContent += `"BREAK","${c.day}","${start}","${end}","N/A","${c.targetName}","N/A","N/A",""\n`;
+                else csvContent += `"${c.taskType.toUpperCase()}","${c.day}","${start}","${end}","${c.subject}","${c.teacher}","${c.section}","${c.room}","${c.description || ''}"\n`;
+            });
+            const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); 
+            const mode = document.getElementById('viewMode').value; const filterVal = document.getElementById('filterValue').value;
+            link.setAttribute("download", `timetable_${mode === 'all' ? 'all' : filterVal.replace(/\s+/g, '_')}.csv`);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        async function exportStyledExcel() {
+            let classesToRender = getFilteredClasses(); if(classesToRender.length === 0) { alert("No data to export."); return; }
+            const mode = document.getElementById('viewMode').value; const filterVal = document.getElementById('filterValue').value;
+            const filename = `Timetable_${mode === 'all' ? 'All' : filterVal.replace(/\s+/g, '_')}.xlsx`;
+
+            const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Timetable');
+            ws.columns = [
+                { header: 'Type', key: 'type', width: 12 }, { header: 'Day', key: 'day', width: 15 }, { header: 'Start Time', key: 'start', width: 15 }, { header: 'End Time', key: 'end', width: 15 },
+                { header: 'Subject', key: 'subject', width: 25 }, { header: 'Teacher', key: 'teacher', width: 25 }, { header: 'Section', key: 'section', width: 15 },
+                { header: 'Room', key: 'room', width: 15 }, { header: 'Description', key: 'description', width: 30 }
+            ];
+
+            const prefSize = parseInt(document.getElementById('prefSize').value); const prefAlign = document.getElementById('prefAlign').value;
+            let rawFont = document.getElementById('prefFont').value; let prefFontName = rawFont.split(',')[0].replace(/['"]/g, '').trim();
+
+            const headerRow = ws.getRow(1);
+            headerRow.font = { name: prefFontName, size: prefSize + 2, bold: true, color: { argb: 'FFFFFFFF' } }; headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+            headerRow.eachCell(cell => cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } });
+
+            let exportData = [...classesToRender].sort((a, b) => (weekdays.indexOf(a.day) - weekdays.indexOf(b.day)) || (a.start - b.start));
+            exportData.forEach((c) => {
+                let rowData = c.isLunch ? 
+                    { type: 'BREAK', day: c.day, start: minutesToTimeStr(c.start), end: minutesToTimeStr(c.start + c.duration), subject: '-', teacher: c.targetName, section: '-', room: '-', description: '-' } : 
+                    { type: c.taskType.toUpperCase(), day: c.day, start: minutesToTimeStr(c.start), end: minutesToTimeStr(c.start + c.duration), subject: c.subject, teacher: c.teacher, section: c.section, room: c.room, description: c.description || '' };
+                
+                let row = ws.addRow(rowData);
+                let hexColor = 'FFFFFF';
+                if (c.isLunch) hexColor = 'F1F5F9'; else if (c.taskType === 'admin') hexColor = 'FEF08A'; else if (c.taskType === 'consult') hexColor = 'E9D5FF';
+                else if (c.taskType === 'homeroom') hexColor = 'CFFAFE'; else if (c.taskType === 'studentOrg') hexColor = 'FCE7F3'; else hexColor = (c.color || '#FFFFFF').replace('#', '').toUpperCase();
+                
+                row.eachCell((cell, colNumber) => {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + hexColor } };
+                    cell.font = { name: prefFontName, size: prefSize, color: { argb: c.isLunch ? 'FF475569' : 'FF000000'} };
+                    cell.alignment = { horizontal: (colNumber >= 2 && colNumber <= 4) ? 'center' : prefAlign, vertical: 'middle' };
+                    cell.border = { top: { style: 'thin', color: { argb: 'FFCBD5E1' } }, left: { style: 'thin', color: { argb: 'FFCBD5E1' } }, bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } }, right: { style: 'thin', color: { argb: 'FFCBD5E1' } } };
+                });
+            });
+            const buffer = await wb.xlsx.writeBuffer(); saveAs(new Blob([buffer]), filename);
+        }
+
+        function exportBackup() {
+            let backupData = { roomsPool, teachersPool, subjectsPool, sectionsPool, excludedRooms, scheduledClasses, classIdCounter, colorIndex, currentBackupName };
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
+            let link = document.createElement("a"); link.setAttribute("href", dataStr); link.setAttribute("download", `scheduler_ultimate_${Date.now()}.json`);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        function triggerImport() { document.getElementById('importBackupFile').click(); }
+        function importBackup(event) {
+            let file = event.target.files[0]; if(!file) return; let loadedFileName = file.name; let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let data = JSON.parse(e.target.result);
+                    if(data.scheduledClasses && Array.isArray(data.scheduledClasses)) {
+                        roomsPool = data.roomsPool || []; teachersPool = data.teachersPool || []; subjectsPool = data.subjectsPool || []; sectionsPool = data.sectionsPool || [];
+                        excludedRooms = data.excludedRooms || []; scheduledClasses = data.scheduledClasses; classIdCounter = data.classIdCounter || Date.now(); colorIndex = data.colorIndex || 0;
+                        currentBackupName = loadedFileName; document.getElementById('backupNameText').innerText = currentBackupName;
+                        document.getElementById('viewMode').value = 'all'; updateFilterOptions(null, true); triggerUpdate(); alert("Data successfully loaded!");
+                    } else alert("Invalid save file format.");
+                } catch(err) { alert("Error reading save file."); }
+            };
+            reader.readAsText(file); event.target.value = ""; 
+        }
+
+        // Initialize Native Settings and the Update Engine Sequentially
+        window.onload = function() {
+            initData();
+            setTimeout(checkForUpdates, 2000); 
+        };
+    </script>
+</body>
+</html>
