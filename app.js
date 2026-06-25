@@ -8,8 +8,8 @@
 // 1. CONFIGURATION & STATE
 // ==========================================
 const Config = {
-    VERSION: "v6.3 Ultimate",
-    CURRENT_VERSION: "6.3",
+    VERSION: "v6.4 Ultimate",
+    CURRENT_VERSION: "6.4",
     REMOTE_KEYS_URL: "https://sirmarkyu02.github.io/scheduler-updater/keys.json",
     REMOTE_VERSION_URL: "https://sirmarkyu02.github.io/scheduler-updater/version.json",
     START_MINS: 450,
