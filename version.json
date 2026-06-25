@@ -1,0 +1,10 @@
+{
+  "version": "6.4",
+  "title": "Critical Upgrade: Remote Activation & Architecture Split",
+  "changelog": [
+    "Upgraded system database configurations.",
+    "Transitioned to secure remote key activation verification.",
+    "Optimized file architecture for faster loading speeds."
+  ],
+  "downloadUrl": "https://sirmarkyu02.github.io/scheduler-updater/"
+}
