@@ -1,8 +1,10 @@
 {
-  "latestVersion": "6.1",
-  "downloadUrl": "https://sirmarkyu02.github.io/scheduler-updater/index.html",
+  "version": "6.4",
+  "title": "Critical Upgrade: Remote Activation & Architecture Split",
   "changelog": [
-    "Initial Ultimate Edition Release",
-    "Added background auto-update engine"
-  ]
+    "Upgraded system database configurations.",
+    "Transitioned to secure remote key activation verification.",
+    "Optimized file architecture for faster loading speeds."
+  ],
+  "downloadUrl": "https://sirmarkyu02.github.io/scheduler-updater/"
 }
